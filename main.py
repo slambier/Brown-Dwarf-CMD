@@ -6,26 +6,47 @@ import matplotlib as mpl
 mpl.rcParams['agg.path.chunksize'] = 100000
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 
+#---------------------------------------
+
+def main():
+    """
+    Main function.
+    """
+    fileanalysis(photometry='2mass')
+    return
 
 #---------------------------------------
 
-#def cmdplot(m, l, t, y, overplot):
+#def cmdplot(m, l, t, y, overplot, photometry):
 def cmdplot(m, l, t, y, photometry):
     """
-    This code plots a CMD of the data inputted. 
+    This code plots a CMD of the data inputted.
+    Inputs:
+    m                Array containing J mag, J - K, and corresponding errors for M-type brown dwarfs.
+    l                Array containing J mag, J - K, and corresponding errors for L-type brown dwarfs.
+    t                Array containing J mag, J - K, and corresponding errors for T-type brown dwarfs.
+    y                Array containing J mag, J - K, and corresponding errors for Y-type brown dwarfs.
+    overplot         Array containing J mag, J - K, and corresponding errors for inputted brown dwarfs.
+    photometry       Photometry type for plotting.
+
+    Outputs:
+    None
     
     """
-    
+    # Set up plot
     fig = plt.figure(figsize=(10, 10))
     ax = plt.gca()
 
-    ax.invert_yaxis()
+    # Plotting data
     plt.errorbar(m[:,1], m[:,0], m[:,3], m[:,2], color='navy', ecolor ='lightsteelblue', marker='o', ls='none', mec='lightskyblue', ms=9, mew=0.5, alpha=0.7, label='M - Type')
     plt.errorbar(l[:,1], l[:,0], l[:,3], l[:,2], color='darkgreen', ecolor='lightgreen', marker='^', ls='none', mec='honeydew', ms=10, mew=0.4, alpha=0.7, label='L - Type')
     plt.errorbar(t[:,1], t[:,0], t[:,3], t[:,2], color='maroon', ecolor='lightcoral', marker='d', ls='none', mec='pink', ms=10, mew=0.5, alpha=0.7, label='T - Type')
     plt.errorbar(y[:,1], y[:,0], y[:,3], y[:,2], color='indigo', ecolor='thistle', marker='s', ls='none', mec='plum', ms=9, mew=0.5, alpha=0.7, label='Y - Type')
     #plt.errorbar(null_jkmag, null_jmag, null_jkmagerror, null_jmagerror, color='orangered', marker='*', ecolor='sandybrown', ls='none', mec='peachpuff', ms=24, mew=0.5,alpha=0.7, label='Unknown Type')
     plt.legend(loc="upper left", prop={'size': 16})
+
+    # Invert y-axis
+    ax.invert_yaxis()
 
     # Minor axes
     ax.xaxis.set_minor_locator(MultipleLocator(0.2))
@@ -39,9 +60,11 @@ def cmdplot(m, l, t, y, photometry):
     for axis in ['top','bottom','left','right']:
         ax.spines[axis].set_linewidth(3)
 
+    # Axis titles
     plt.xlabel("$J - K$", fontsize=28)
     plt.ylabel("M$_J$", fontsize=28)
 
+    # Save figure
     savename = "browndwarfCMD" + photometry
     plt.savefig(savename)
     
@@ -57,6 +80,13 @@ def fileanalysis(photometry="MKO"):
     """
     This function takes in files with data to plot, breaks it into the proper catagories, 
     then calls the plotting function.
+
+    Inputs:
+    inputfilepath         File path to csv with data for overplotting.
+    photometry            Photometry data to use in plotting. Either "MKO" or "2MASS", "MKO" is the defult.
+
+    Outputs:
+    None
     
     """
     # Read data file
@@ -186,70 +216,71 @@ def fileanalysis(photometry="MKO"):
             null_jkmagerror.append(jkmagerrord[ispec])
 
     # Add Best data if 2MASS
-    # if photometry == "2MASS":
-    #     bestdata = np.loadtxt("best95list.txt", dtype=str, delimiter=";", skiprows=2)
+    if photometry == "2MASS":
+        bestdata = np.loadtxt("best95list.txt", dtype=str, delimiter=";", skiprows=2)
 
-    #     bestjmag = np.array(bestdata[:,7])
-    #     bestjmag = np.where(bestjmag=="null", np.nan, bestjmag).astype('float64')
+        bestjmag = np.array(bestdata[:,7])
+        bestjmag = np.where(bestjmag=="null", np.nan, bestjmag).astype('float64')
 
-    #     bestkmag = np.array(bestdata[:,8])
-    #     bestkmag = np.where(bestkmag=="null", np.nan, bestkmag).astype('float64')
+        bestkmag = np.array(bestdata[:,8])
+        bestkmag = np.where(bestkmag=="null", np.nan, bestkmag).astype('float64')
 
-    #     bestjkmag = bestjmag - bestkmag
+        bestjkmag = bestjmag - bestkmag
 
-    #     bestspectype = np.array(bestdata[:,9])
+        bestspectype = np.array(bestdata[:,9])
 
-    #     bestplusj = np.array([])
-    #     bestplusjk= np.array([])
-    #     bestplusspec = np.array([])
+        bestplusj = np.array([])
+        bestplusjk= np.array([])
+        bestplusspec = np.array([])
 
-    #     for ispec in range(len(bestspectype)):
-    #         if '+' not in bestspectype[ispec]:
-    #             bestplusj = np.append(bestplusj, bestjmag[ispec])
-    #             bestplusjk = np.append(bestplusjk, bestjkmag[ispec])
-    #             bestplusspec = np.append(bestplusspec, bestspectype[ispec])
+        for ispec in range(len(bestspectype)):
+            if '+' not in bestspectype[ispec]:
+                bestplusj = np.append(bestplusj, bestjmag[ispec])
+                bestplusjk = np.append(bestplusjk, bestjkmag[ispec])
+                bestplusspec = np.append(bestplusspec, bestspectype[ispec])
 
-    #     # comment is red
-    #     bestjerror = np.zeros(len(bestplusj))
-    #     bestjkerror = np.zeros(len(bestplusj))
+        # comment is red
+        bestjerror = np.zeros(len(bestplusj))
+        bestjkerror = np.zeros(len(bestplusj))
         
-    #     # Sort data into spectral types
-    #     for ispec in range(len(bestplusspec)):
-    #         if "M" in bestplusspec[ispec]:
-    #             m_jmag.append(bestplusj[ispec])
-    #             m_jkmag.append(bestplusjk[ispec])
-    #             m_jmagerror.append(bestjerror[ispec])
-    #             m_jkmagerror.append(bestjkerror[ispec])
-    #             m_spec.append(bestplusspec[ispec])
-    #             #print(spectype[ispec])
+        # Sort data into spectral types
+        for ispec in range(len(bestplusspec)):
+            if "M" in bestplusspec[ispec]:
+                m_jmag.append(bestplusj[ispec])
+                m_jkmag.append(bestplusjk[ispec])
+                m_jmagerror.append(bestjerror[ispec])
+                m_jkmagerror.append(bestjkerror[ispec])
+                m_spec.append(bestplusspec[ispec])
+                #print(spectype[ispec])
 
-    #         elif "L" in bestplusspec[ispec]:
-    #             l_jmag.append(bestplusj[ispec])
-    #             l_jkmag.append(bestplusjk[ispec])
-    #             l_jmagerror.append(bestjerror[ispec])
-    #             l_jkmagerror.append(bestjkerror[ispec])
-    #             #print(spectype[ispec])
+            elif "L" in bestplusspec[ispec]:
+                l_jmag.append(bestplusj[ispec])
+                l_jkmag.append(bestplusjk[ispec])
+                l_jmagerror.append(bestjerror[ispec])
+                l_jkmagerror.append(bestjkerror[ispec])
+                #print(spectype[ispec])
 
-    #         elif "T" in bestplusspec[ispec]:
-    #             t_jmag.append(bestplusj[ispec])
-    #             t_jkmag.append(bestplusjk[ispec])
-    #             t_jmagerror.append(bestjerror[ispec])
-    #             t_jkmagerror.append(bestjkerror[ispec])
-    #             #print(spectype[ispec])
+            elif "T" in bestplusspec[ispec]:
+                t_jmag.append(bestplusj[ispec])
+                t_jkmag.append(bestplusjk[ispec])
+                t_jmagerror.append(bestjerror[ispec])
+                t_jkmagerror.append(bestjkerror[ispec])
+                #print(spectype[ispec])
 
-    #         elif "Y" in bestplusspec[ispec]:
-    #             y_jmag.append(bestplusj[ispec])
-    #             y_jkmag.append(bestplusjk[ispec])
-    #             y_jmagerror.append(bestjerror[ispec])
-    #             y_jkmagerror.append(bestjkerror[ispec])
-    #             #print(spectype[ispec])
+            elif "Y" in bestplusspec[ispec]:
+                y_jmag.append(bestplusj[ispec])
+                y_jkmag.append(bestplusjk[ispec])
+                y_jmagerror.append(bestjerror[ispec])
+                y_jkmagerror.append(bestjkerror[ispec])
+                #print(spectype[ispec])
 
-    #         else:
-    #             null_jmag.append(bestplusj[ispec])
-    #             null_jkmag.append(bestplusjk[ispec])
-    #             null_jmagerror.append(bestjerror[ispec])
-    #             null_jkmagerror.append(bestjkerror[ispec])
+            else:
+                null_jmag.append(bestplusj[ispec])
+                null_jkmag.append(bestplusjk[ispec])
+                null_jmagerror.append(bestjerror[ispec])
+                null_jkmagerror.append(bestjkerror[ispec])
     
+    # Create arrays for plotting
     m = np.vstack((m_jmag, m_jkmag, m_jmagerror, m_jkmagerror)).T
     l = np.vstack((l_jmag, l_jkmag, l_jmagerror, l_jkmagerror)).T
     t = np.vstack((t_jmag, t_jkmag, t_jmagerror, t_jkmagerror)).T
@@ -261,4 +292,9 @@ def fileanalysis(photometry="MKO"):
     return
 
 
-fileanalysis(photometry='2mass')
+#----------------------------------
+
+
+
+if __name__ == "__main__":
+    main()
