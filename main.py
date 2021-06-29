@@ -92,7 +92,7 @@ def fileanalysis(photometry="MKO"):
     # Read data file
     with fits.open("vlm-plx-all.fits") as browndwarflist:
         data = browndwarflist[1].data
-        hdr = browndwarflist[1].header
+        #hdr = browndwarflist[1].header
         
     # Setting variables from fits file
     objnames = data["NAME"]
@@ -217,66 +217,60 @@ def fileanalysis(photometry="MKO"):
 
     # Add Best data if 2MASS
     if photometry == "2MASS":
-        bestdata = np.loadtxt("best95list.txt", dtype=str, delimiter=";", skiprows=2)
+        bestdata = np.loadtxt("bestmatcheddata.csv", dtype=str, delimiter=",", skiprows=1)
 
-        bestjmag = np.array(bestdata[:,7])
-        bestjmag = np.where(bestjmag=="null", np.nan, bestjmag).astype('float64')
+        bestjmag = np.array(bestdata[:,10])
+        bestjmag = np.where(bestjmag=="", np.nan, bestjmag).astype('float64')
 
-        bestkmag = np.array(bestdata[:,8])
-        bestkmag = np.where(bestkmag=="null", np.nan, bestkmag).astype('float64')
+        bestkmag = np.array(bestdata[:,14])
+        bestkmag = np.where(bestkmag=="", np.nan, bestkmag).astype('float64')
+
+        bestjerror = np.array(bestdata[:, 11])
+        bestjerror = np.where(bestjerror=="", np.nan, bestjerror).astype('float64')
+
+        bestkerror = np.array(bestdata[:, 15])
+        bestkerror = np.where(bestkerror=="", np.nan, bestkerror).astype('float64')
 
         bestjkmag = bestjmag - bestkmag
+        bestjkerror = np.sqrt(bestjerror**2 + bestkerror**2)
 
         bestspectype = np.array(bestdata[:,9])
 
-        bestplusj = np.array([])
-        bestplusjk= np.array([])
-        bestplusspec = np.array([])
-
-        for ispec in range(len(bestspectype)):
-            if '+' not in bestspectype[ispec]:
-                bestplusj = np.append(bestplusj, bestjmag[ispec])
-                bestplusjk = np.append(bestplusjk, bestjkmag[ispec])
-                bestplusspec = np.append(bestplusspec, bestspectype[ispec])
-
-        # comment is red
-        bestjerror = np.zeros(len(bestplusj))
-        bestjkerror = np.zeros(len(bestplusj))
         
         # Sort data into spectral types
-        for ispec in range(len(bestplusspec)):
-            if "M" in bestplusspec[ispec]:
-                m_jmag.append(bestplusj[ispec])
-                m_jkmag.append(bestplusjk[ispec])
+        for ispec in range(len(bestspectype)):
+            if "M" in bestspectype[ispec]:
+                m_jmag.append(bestjmag[ispec])
+                m_jkmag.append(bestjkmag[ispec])
                 m_jmagerror.append(bestjerror[ispec])
                 m_jkmagerror.append(bestjkerror[ispec])
-                m_spec.append(bestplusspec[ispec])
+                m_spec.append(bestspectype[ispec])
                 #print(spectype[ispec])
 
-            elif "L" in bestplusspec[ispec]:
-                l_jmag.append(bestplusj[ispec])
-                l_jkmag.append(bestplusjk[ispec])
+            elif "L" in bestspectype[ispec]:
+                l_jmag.append(bestjmag[ispec])
+                l_jkmag.append(bestjkmag[ispec])
                 l_jmagerror.append(bestjerror[ispec])
                 l_jkmagerror.append(bestjkerror[ispec])
                 #print(spectype[ispec])
 
-            elif "T" in bestplusspec[ispec]:
-                t_jmag.append(bestplusj[ispec])
-                t_jkmag.append(bestplusjk[ispec])
+            elif "T" in bestspectype[ispec]:
+                t_jmag.append(bestjmag[ispec])
+                t_jkmag.append(bestjkmag[ispec])
                 t_jmagerror.append(bestjerror[ispec])
                 t_jkmagerror.append(bestjkerror[ispec])
                 #print(spectype[ispec])
 
-            elif "Y" in bestplusspec[ispec]:
-                y_jmag.append(bestplusj[ispec])
-                y_jkmag.append(bestplusjk[ispec])
+            elif "Y" in bestspectype[ispec]:
+                y_jmag.append(bestjmag[ispec])
+                y_jkmag.append(bestjkmag[ispec])
                 y_jmagerror.append(bestjerror[ispec])
                 y_jkmagerror.append(bestjkerror[ispec])
                 #print(spectype[ispec])
 
             else:
-                null_jmag.append(bestplusj[ispec])
-                null_jkmag.append(bestplusjk[ispec])
+                null_jmag.append(bestjmag[ispec])
+                null_jkmag.append(bestjkmag[ispec])
                 null_jmagerror.append(bestjerror[ispec])
                 null_jkmagerror.append(bestjkerror[ispec])
     
@@ -286,7 +280,7 @@ def fileanalysis(photometry="MKO"):
     t = np.vstack((t_jmag, t_jkmag, t_jmagerror, t_jkmagerror)).T
     y = np.vstack((y_jmag, y_jkmag, y_jmagerror, y_jkmagerror)).T
     
-    #cmdplot(m, l, t, y, overplot)
+    #cmdplot(m, l, t, y, overplot, photometry)
     cmdplot(m, l, t, y, photometry)
 
     return
