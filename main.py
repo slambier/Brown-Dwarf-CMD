@@ -17,8 +17,8 @@ def main():
 
 #---------------------------------------
 
-#def cmdplot(m, l, t, y, overplot, photometry):
-def cmdplot(m, l, t, y, photometry):
+def cmdplot(m, l, t, y, overplot, photometry):
+#def cmdplot(m, l, t, y, photometry):
     """
     This code plots a CMD of the data inputted.
     Inputs:
@@ -42,7 +42,19 @@ def cmdplot(m, l, t, y, photometry):
     plt.errorbar(l[:,1], l[:,0], l[:,3], l[:,2], color='darkgreen', ecolor='lightgreen', marker='^', ls='none', mec='honeydew', ms=10, mew=0.4, alpha=0.7, label='L - Type')
     plt.errorbar(t[:,1], t[:,0], t[:,3], t[:,2], color='maroon', ecolor='lightcoral', marker='d', ls='none', mec='pink', ms=10, mew=0.5, alpha=0.7, label='T - Type')
     plt.errorbar(y[:,1], y[:,0], y[:,3], y[:,2], color='indigo', ecolor='thistle', marker='s', ls='none', mec='plum', ms=9, mew=0.5, alpha=0.7, label='Y - Type')
-    #plt.errorbar(null_jkmag, null_jmag, null_jkmagerror, null_jmagerror, color='orangered', marker='*', ecolor='sandybrown', ls='none', mec='peachpuff', ms=24, mew=0.5,alpha=0.7, label='Unknown Type')
+    
+    if overplot == None:
+        placeholder = 1
+    else:
+        plt.errorbar(overplot[:,1], overplot[:,0], overplot[:,3], overplot[:,2], color='orangered', marker='*', ecolor='sandybrown', ls='none', mec='peachpuff', ms=24, mew=0.5,alpha=0.7)
+        # Label the overplotted data points
+        nameover = overplot[:,5]
+        x = overplot[:,1]
+        y = overplot[:,0]
+        for i, txt in enumerate(nameover):
+            ax.annotate(txt, (x[i],y[i]))
+    
+    
     plt.legend(loc="upper left", prop={'size': 16})
 
     # Invert y-axis
@@ -74,9 +86,8 @@ def cmdplot(m, l, t, y, photometry):
 #---------------------------------------
 
 
-
-#def fileanalysis(inputfilepath, photometry = "MKO"):
-def fileanalysis(photometry="MKO"):
+#def fileanalysis(photometry="MKO"):
+def fileanalysis(inputfilepath=None, photometry = "MKO"):
     """
     This function takes in files with data to plot, breaks it into the proper catagories, 
     then calls the plotting function.
@@ -280,8 +291,24 @@ def fileanalysis(photometry="MKO"):
     t = np.vstack((t_jmag, t_jkmag, t_jmagerror, t_jkmagerror)).T
     y = np.vstack((y_jmag, y_jkmag, y_jmagerror, y_jkmagerror)).T
     
-    #cmdplot(m, l, t, y, overplot, photometry)
-    cmdplot(m, l, t, y, photometry)
+
+    # Overplotting data
+    if inputfilepath == None:
+        overplot = None
+    else:
+        overplotdata = np.loadtxt(inputfilepath, dtype=str, delimiter=",", skiprows=1)
+
+        namesover = np.array(overplotdata[:, 0])
+        jmagover = np.array(overplotdata[:, 1])
+        jkmagover = np.array(overplotdata[:, 3])
+        ejmagover = np.array(overplotdata[:, 2])
+        ejkmagover = np.array(overplotdata[:, 4])
+
+        overplot = np.vstack((jmagover, jkmagover, ejmagover, ejkmagover, namesover)).T
+
+
+    cmdplot(m, l, t, y, overplot, photometry)
+    #cmdplot(m, l, t, y, photometry)
 
     return
 
