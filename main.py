@@ -54,9 +54,11 @@ def cmdplot(m, l, t, y, overplot, photometry):
         for i, txt in enumerate(nameover):
             ax.annotate(txt, (x[i],y[i]))
     
+    if photometry == "ALLWISE":
+        plt.legend(loc="upper right", prop={'size': 16})
+    else:
+        plt.legend(loc="upper left", prop={'size': 16})
     
-    plt.legend(loc="upper left", prop={'size': 16})
-
     # Invert y-axis
     ax.invert_yaxis()
 
@@ -74,8 +76,8 @@ def cmdplot(m, l, t, y, overplot, photometry):
 
     # Axis titles
     if photometry == "ALLWISE":
-        plt.xlabel("$W1 - W2", fontsize=28)
-        plt.ylabel("W$_{W1}$", fontsize=28)
+        plt.xlabel("$\it{W1 - W2}$", fontsize=28)
+        plt.ylabel("M$\it{_{W1}}$", fontsize=28)
     else:
         plt.xlabel("$J - K$", fontsize=28)
         plt.ylabel("M$_J$", fontsize=28)
@@ -308,12 +310,13 @@ def fileanalysis(inputfilepath=None, photometry = "MKO"):
 
     # Add allWISE data if ALLWISE
     elif photometry == "ALLWISE":
-        allwisedata = np.loadtxt("allwisematcheddata", dtype=str, delimiter=",", skiprows=1)
+        allwisedata = np.loadtxt("allwisematcheddata.csv", dtype=str, delimiter=",", skiprows=1)
 
-        w1mag = np.array(allwisedata[:,10])
-        w2mag = np.array(allwisedata[:,12])
+        w1mag = np.array(allwisedata[:,10]).astype('float64')
+        w2mag = np.array(allwisedata[:,12]).astype('float64')
         ew1mag = np.array(allwisedata[:,11])
-        ew2mag = np.array(allwisedata[:,13])
+        ew1mag = np.where(ew1mag=="", 0, ew1mag).astype('float64')
+        ew2mag = np.array(allwisedata[:,13]).astype('float64')
 
         w12mag = w1mag - w2mag
         ew12mag = np.sqrt(ew1mag**2 + ew2mag**2)
