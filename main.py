@@ -12,7 +12,9 @@ def main():
     """
     Main function.
     """
-    fileanalysis(photometry='allwise')
+
+    csvfilepath = "/Users/samantha/OneDrive - The University of Western Ontario/Research Summer 2021/CatWISE Planemos.csv"
+    fileanalysis(csvfilepath, photometry='allwise')
     return
 
 #---------------------------------------
@@ -43,16 +45,16 @@ def cmdplot(m, l, t, y, overplot, photometry):
     plt.errorbar(t[:,1], t[:,0], t[:,3], t[:,2], color='maroon', ecolor='lightcoral', marker='d', ls='none', mec='pink', ms=10, mew=0.5, alpha=0.7, label='T - Type')
     plt.errorbar(y[:,1], y[:,0], y[:,3], y[:,2], color='indigo', ecolor='thistle', marker='s', ls='none', mec='plum', ms=9, mew=0.5, alpha=0.7, label='Y - Type')
     
-    if overplot == None:
+    if len(overplot) == 0:
         placeholder = 1
     else:
-        plt.errorbar(overplot[:,1], overplot[:,0], overplot[:,3], overplot[:,2], color='orangered', marker='*', ecolor='sandybrown', ls='none', mec='peachpuff', ms=24, mew=0.5,alpha=0.7)
+        plt.errorbar(overplot[0:5,1].astype('float64'), overplot[0:5,0].astype('float64'), overplot[0:5,3].astype('float64'), overplot[0:5,2].astype('float64'), color='orangered', marker='*', ecolor='sandybrown', ls='none', mec='peachpuff', ms=24, mew=0.5,alpha=0.7)
         # Label the overplotted data points
-        nameover = overplot[:,5]
-        x = overplot[:,1]
-        y = overplot[:,0]
+        nameover = overplot[0:5,4]
+        x = overplot[0:5,1].astype('float64')
+        y = overplot[0:5,0].astype('float64')
         for i, txt in enumerate(nameover):
-            ax.annotate(txt, (x[i],y[i]))
+            ax.annotate(txt, (x[i],y[i]), xytext = (x[i]-0.1, y[i]+0.25), arrowprops=dict(color="orangered", arrowstyle="-"), fontsize=12, fontweight='bold', color="orangered")
     
     if photometry == "ALLWISE":
         plt.legend(loc="upper right", prop={'size': 16})
@@ -395,17 +397,33 @@ def fileanalysis(inputfilepath=None, photometry = "MKO"):
 
     # Overplotting data
     if inputfilepath == None:
-        overplot = None
+        overplot = np.array([]).astype("float64")
     else:
         overplotdata = np.loadtxt(inputfilepath, dtype=str, delimiter=",", skiprows=1)
 
         namesover = np.array(overplotdata[:, 0])
-        jmagover = np.array(overplotdata[:, 1])
-        jkmagover = np.array(overplotdata[:, 3])
-        ejmagover = np.array(overplotdata[:, 2])
-        ejkmagover = np.array(overplotdata[:, 4])
 
-        overplot = np.vstack((jmagover, jkmagover, ejmagover, ejkmagover, namesover)).T
+        if photometry == "ALLWISE":
+            w1magover = np.array(overplotdata[:, 3]).astype("float64")
+            w12magover = np.array(overplotdata[:, 4]).astype("float64")
+            ew1magover = np.zeros(len(w1magover))
+            ew12magover = np.zeros(len(w12magover))
+            overplot = np.vstack((w1magover, w12magover, ew1magover, ew12magover, namesover)).T
+
+        elif photometry == "MKO":
+            jmagover = np.array(overplotdata[:, 1])
+            jkmagover = np.array(overplotdata[:, 3])
+            ejmagover = np.array(overplotdata[:, 2])
+            ejkmagover = np.array(overplotdata[:, 4])
+            overplot = np.vstack((jmagover, jkmagover, ejmagover, ejkmagover, namesover)).T
+
+        elif photometry == "2MASS":
+            jmagover = np.array(overplotdata[:, 1])
+            jkmagover = np.array(overplotdata[:, 3])
+            ejmagover = np.array(overplotdata[:, 2])
+            ejkmagover = np.array(overplotdata[:, 4])
+            overplot = np.vstack((jmagover, jkmagover, ejmagover, ejkmagover, namesover)).T
+
 
 
     cmdplot(m, l, t, y, overplot, photometry)
