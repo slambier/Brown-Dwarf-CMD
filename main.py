@@ -14,12 +14,12 @@ def main():
     """
 
     csvfilepath = "/Users/samantha/OneDrive - The University of Western Ontario/Research Summer 2021/CatWISE Planemos.csv"
-    fileanalysis(csvfilepath, photometry='allwise')
+    fileanalysis(csvfilepath, photometry='allwise', annotate=False)
     return
 
 #---------------------------------------
 
-def cmdplot(m, l, t, y, overplot, photometry):
+def cmdplot(m, l, t, y, overplot, photometry, annotate):
 #def cmdplot(m, l, t, y, photometry):
     """
     This code plots a CMD of the data inputted.
@@ -48,13 +48,14 @@ def cmdplot(m, l, t, y, overplot, photometry):
     if len(overplot) == 0:
         placeholder = 1
     else:
-        plt.errorbar(overplot[0:5,1].astype('float64'), overplot[0:5,0].astype('float64'), overplot[0:5,3].astype('float64'), overplot[0:5,2].astype('float64'), color='orangered', marker='*', ecolor='sandybrown', ls='none', mec='peachpuff', ms=24, mew=0.5,alpha=0.7)
+        plt.errorbar(overplot[:,1].astype('float64'), overplot[:,0].astype('float64'), overplot[:,3].astype('float64'), overplot[:,2].astype('float64'), color='orangered', marker='*', ecolor='sandybrown', ls='none', mec='peachpuff', ms=15, mew=0.5,alpha=0.6, label= "Overplotted Data")
         # Label the overplotted data points
-        nameover = overplot[0:5,4]
-        x = overplot[0:5,1].astype('float64')
-        y = overplot[0:5,0].astype('float64')
-        for i, txt in enumerate(nameover):
-            ax.annotate(txt, (x[i],y[i]), xytext = (x[i]-0.1, y[i]+0.25), arrowprops=dict(color="orangered", arrowstyle="-"), fontsize=12, fontweight='bold', color="orangered")
+        nameover = overplot[:,4]
+        x = overplot[:,1].astype('float64')
+        y = overplot[:,0].astype('float64')
+        if annotate == True:
+            for i, txt in enumerate(nameover):
+                ax.annotate(txt, (x[i],y[i]), xytext = (x[i]-0.1, y[i]+0.25), arrowprops=dict(color="orangered", arrowstyle="-"), fontsize=12, fontweight='bold', color="orangered")
     
     if photometry == "ALLWISE":
         plt.legend(loc="upper right", prop={'size': 16})
@@ -95,7 +96,7 @@ def cmdplot(m, l, t, y, overplot, photometry):
 
 
 #def fileanalysis(photometry="MKO"):
-def fileanalysis(inputfilepath=None, photometry = "MKO"):
+def fileanalysis(inputfilepath=None, photometry="MKO", annotate=True):
     """
     This function takes in files with data to plot, breaks it into the proper catagories, 
     then calls the plotting function.
@@ -103,6 +104,7 @@ def fileanalysis(inputfilepath=None, photometry = "MKO"):
     Inputs:
     inputfilepath         File path to csv with data for overplotting.
     photometry            Photometry data to use in plotting -- "MKO", "2MASS" or "ALLWISE". "MKO" is the defult.
+    annotate              Boolean. If True, overplot data will be annotated with object name in plot. True is the defult.
 
     Outputs:
     None
@@ -410,23 +412,31 @@ def fileanalysis(inputfilepath=None, photometry = "MKO"):
             ew12magover = np.zeros(len(w12magover))
             overplot = np.vstack((w1magover, w12magover, ew1magover, ew12magover, namesover)).T
 
+
         elif photometry == "MKO":
-            jmagover = np.array(overplotdata[:, 1])
-            jkmagover = np.array(overplotdata[:, 3])
-            ejmagover = np.array(overplotdata[:, 2])
-            ejkmagover = np.array(overplotdata[:, 4])
+            jmagover = np.array(overplotdata[:, 53])
+            kmagover = np.array(overplotdata[:, 56])
+            ejmagover = np.array(overplotdata[:, 54])
+            ekmagover = np.array(overplotdata[:, 57])
+
+            jkmagover = jmagover - kmagover
+            ejkmagover = np.sqrt(ejmagover**2 + ekmagover**2)
             overplot = np.vstack((jmagover, jkmagover, ejmagover, ejkmagover, namesover)).T
+
 
         elif photometry == "2MASS":
-            jmagover = np.array(overplotdata[:, 1])
-            jkmagover = np.array(overplotdata[:, 3])
-            ejmagover = np.array(overplotdata[:, 2])
-            ejkmagover = np.array(overplotdata[:, 4])
+            jmagover = np.array(overplotdata[:, 53])
+            kmagover = np.array(overplotdata[:, 56])
+            ejmagover = np.array(overplotdata[:, 54])
+            ekmagover = np.array(overplotdata[:, 57])
+
+            jkmagover = jmagover - kmagover
+            ejkmagover = np.sqrt(ejmagover**2 + ekmagover**2)
             overplot = np.vstack((jmagover, jkmagover, ejmagover, ejkmagover, namesover)).T
 
 
 
-    cmdplot(m, l, t, y, overplot, photometry)
+    cmdplot(m, l, t, y, overplot, photometry, annotate)
     #cmdplot(m, l, t, y, photometry)
 
     return
