@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 mpl.rcParams['agg.path.chunksize'] = 100000
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+import csv
 
 #---------------------------------------
 
@@ -15,12 +16,26 @@ def main():
 
     csvfilepath = "/Users/samantha/OneDrive - The University of Western Ontario/Research Summer 2021/CatWISE Planemos.csv"
     fileanalysis(csvfilepath, photometry='allwise', annotate=False)
+    copycsvfilepath = "/Users/samantha/OneDrive - The University of Western Ontario/Research Summer 2021/Copy of CatWISE Planemos.csv"
+    flagcsv = flagcatwise(copycsvfilepath)
+
+    header = ["Name", "Flag"]
+
+
+    with open('CatWise_Flag.csv', 'w', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
+
+        # write the header
+        writer.writerow(header)
+        
+        # write multiple rows
+        writer.writerows(flagcsv)
+
     return
 
 #---------------------------------------
 
 def cmdplot(m, l, t, y, overplot, photometry, annotate):
-#def cmdplot(m, l, t, y, photometry):
     """
     This code plots a CMD of the data inputted.
     Inputs:
@@ -95,7 +110,6 @@ def cmdplot(m, l, t, y, overplot, photometry, annotate):
 #---------------------------------------
 
 
-#def fileanalysis(photometry="MKO"):
 def fileanalysis(inputfilepath=None, photometry="MKO", annotate=True):
     """
     This function takes in files with data to plot, breaks it into the proper catagories, 
@@ -437,13 +451,104 @@ def fileanalysis(inputfilepath=None, photometry="MKO", annotate=True):
 
 
     cmdplot(m, l, t, y, overplot, photometry, annotate)
-    #cmdplot(m, l, t, y, photometry)
+   
 
-    return
+    return m, l, t, y, overplot
 
 
 #----------------------------------
 
+def flagcatwise(csvfilepath):
+    """
+    
+    """
+
+    
+    m, l, t, y, overplot = fileanalysis(csvfilepath, photometry='allwise', annotate=False)
+
+
+    w1mag = np.hstack((m[:,0], l[:,0], t[:,0]))
+    w12mag = np.hstack((m[:,1], l[:,1], t[:,1]))
+
+    no_outw1 = np.array([])
+    no_outw12 = np.array([])
+
+
+    for i in range(len(w1mag)):
+        if not ((w1mag[i] > 16.0) and (w12mag[i] < 1.6)):
+            no_outw1 = np.append(no_outw1, w1mag[i])
+            no_outw12 = np.append(no_outw12, w12mag[i])
+
+    binnum = int((np.max(w12mag)-np.min(w12mag))//0.1)
+    binhwid = 0.2
+    bincen = 0.1
+
+    allbinmaxes = np.empty((0, 3))
+
+    for i in range(binnum):
+        binmin = bincen - binhwid
+        binmax = bincen + binhwid
+        bincen+=0.1
+        thebin = np.empty((0))
+        
+        for j in range(len(no_outw12)):
+            if (no_outw12[j] >= binmin) and (no_outw12[j] <= binmax):
+                thebin = np.append(thebin, no_outw1[j])
+        
+        if len(thebin) == 0:
+            binmaxval = 0
+        else:
+            binmaxval = np.max(thebin)
+            
+        allbinmaxes = np.append(allbinmaxes, np.array([[binmaxval, binmin, binmax]]), axis=0)
+
+    x = (allbinmaxes[:, 1] + allbinmaxes[:,2])/2
+    y = allbinmaxes[:, 0]
+    x = np.linspace(0.1, 3.7, len(y))
+    m, b = np.polyfit(x, y, 1)
+    #m = slope, b = intercept
+
+    overw1 = overplot[:,0].astype("float64")
+    overw12 = overplot[:,1].astype("float64")
+    overnames = overplot[:,4]
+    forcatwise = np.empty((0, 2))
+            
+    flag = overw1 > m*overw12+b
+    flagw1 = overw1[flag]
+    flagw12 = overw12[flag]
+    flagnames = overnames[flag]
+
+    newflgw1 = []
+    newflgw12 = []
+    for i in range(25):
+        for j in range(len(flagw1)):
+            if flagw12[j] < 2.3:
+                flagx = "x"
+                newflgw1.append(flagw1[j])
+                newflgw12.append(flagw12[j])
+        
+                forcatwise = np.append(forcatwise, np.array([[flagnames[j], flagx]]), axis=0)
+
+    forcatwise = np.unique(forcatwise, axis=0)
+    newforcatwise = forcatwise
+
+    for i in range(len(overnames)):
+        if overnames[i] not in forcatwise[:,0]:
+            newforcatwise = np.append(newforcatwise, np.array([[overnames[i], ""]]), axis=0)
+    
+    fig = plt.figure(figsize=(10, 10))
+    ax = plt.gca()
+    plt.scatter(w12mag, w1mag, label = "Disregarded Best Data")
+    plt.scatter(no_outw12, no_outw1, label = "Best et. al. (2020) Data")
+    plt.scatter(newflgw12, newflgw1, c="k", marker="*", label = "Flagged CatWISE Data")
+    plt.plot(x, m*x + b, c="green", label = "Bin Min Best Fit")
+    plt.legend()
+    ax.invert_yaxis()
+    plt.xlabel("W1 - W2")
+    plt.ylabel("W1")
+    plt.savefig("cmd_flag")
+
+    return newforcatwise
 
 
 if __name__ == "__main__":
