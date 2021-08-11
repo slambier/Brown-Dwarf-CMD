@@ -15,7 +15,7 @@ def main():
     """
 
     csvfilepath = "/Users/samantha/OneDrive - The University of Western Ontario/Research Summer 2021/CatWISE Planemos.csv"
-    fileanalysis(csvfilepath, photometry='allwise', annotate=False)
+    fileanalysis(None, photometry='allwise', annotate=False)
     copycsvfilepath = "/Users/samantha/OneDrive - The University of Western Ontario/Research Summer 2021/Copy of CatWISE Planemos.csv"
     flagcsv = flagcatwise(copycsvfilepath)
 
